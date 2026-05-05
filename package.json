@@ -1,0 +1,24 @@
+{
+  "name": "comunio-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Code.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GringoChoco/comunio-bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/GringoChoco/comunio-bot/issues"
+  },
+  "homepage": "https://github.com/GringoChoco/comunio-bot#readme",
+  "devDependencies": {
+    "@types/google-apps-script": "^2.0.8"
+  }
+}
