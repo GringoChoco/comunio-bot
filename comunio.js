@@ -8,7 +8,7 @@ const password =
   PropertiesService.getScriptProperties().getProperty("COMUNIO_PASSWORD");
 const eventId24 = 391571;
 const upgradeDifference = 0.25;
-const buffer = 125000;
+const buffer = 120000;
 const preseason = false;
 const subs = 3;
 const extraPlayer = 1;
@@ -16,7 +16,7 @@ const extraPlayer = 1;
 // Rule: gekauf - 0.005 nicht gekauft = + 0.001
 const offerPriceFactorStriker = 0.515
 const offerPriceFactorMidfielder = 0.341
-const offerPriceFactorDefender = 0.002
+const offerPriceFactorDefender = 0.003
 const offerPriceFactorKeeper = 0.001
 
 // postOffers acceptOffersAll acceptOffersNonStarter update

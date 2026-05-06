@@ -4,24 +4,6 @@ function doGet() {
   return HtmlService.createHtmlOutput("Kein Get Programmiert");
 }
 
-//Post Funktion
-function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-  getXChangeData(data);
-}
-
-const allPlayerInComunioPlayer = () => {
-  //let oldData = base.getData("comunioPlayer2021")
-  let currentData = base.getData("comunioPlayer");
-  for (const [key, value] of Object.entries(currentData)) {
-    Logger.log(key + " " + value.name);
-    if (value.trend == "Unbekannt<") {
-      //base.removeData("comunioPlayer/" + key)
-      Logger.log("Removed: " + value.name + " from " + value.team);
-    }
-  }
-};
-
 //Gespeicherte Spieler zählen
 const comunioPlayerCounter = () => {
   var comunioPlayer = base.getData("comunioPlayer");
