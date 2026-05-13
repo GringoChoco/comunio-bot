@@ -14,13 +14,13 @@ const subs = 3;
 const extraPlayer = 1;
 
 // Rule: gekauf - 0.005 nicht gekauft = + 0.001
-const offerPriceFactorStriker = 0.515
-const offerPriceFactorMidfielder = 0.341
-const offerPriceFactorDefender = 0.003
+const offerPriceFactorStriker = 0.510
+const offerPriceFactorMidfielder = 0.331
+const offerPriceFactorDefender = 0.004
 const offerPriceFactorKeeper = 0.001
 
 // postOffers acceptOffersAll acceptOffersNonStarter update
-const optimizeLineup = (mode = "update", execute = false, insert = true) => {
+const optimizeLineup = (mode = "update", execute = false, insert = false) => {
   // get accessToken
   let accessToken = getAccessToken();
 
@@ -496,7 +496,7 @@ const optimizeLineup = (mode = "update", execute = false, insert = true) => {
           " </b> ⚽️",
         );
         sendMessage(strMsg.join("\n"));
-        sendMessage(midMsg.join("\n"));
+        //sendMessage(midMsg.join("\n"));
         sendMessage(defMsg.join("\n"));
         sendMessage(keeperMsg.join("\n"));
         if (benchMsg.length > 1) sendMessage(benchMsg.join("\n"));

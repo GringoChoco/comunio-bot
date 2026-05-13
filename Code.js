@@ -45,7 +45,7 @@ const nurMitLIName = () => {
   }
 };
 
-const getComunioPlayerByID = (id = 32629) => {
+const getComunioPlayerByID = (id = 34347) => {
   let player = base.getData("comunioPlayer/" + id);
   Logger.log(JSON.stringify(player));
 };
