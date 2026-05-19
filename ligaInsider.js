@@ -128,85 +128,71 @@ const addLigaInsiderName = () => {
 
 // Aktuelles lineup in firebase speichern
 function getCurrentLineUp() {
-  // Empty array fürs LineUp
+  // Arrays for Expected Lineup vs Actual Game Day Lineup
   let currentLineUpArray = [];
+  let currentGameDayArray = [];
 
-  //Regexes definieren
-  //Starter ohne Sub
-  let safeRegEx = new RegExp(
-    /<div class="player_position_photo"[^>]*><a href="\/(.*?)(?=_)/gs,
-  );
+  // Regexes
+  let safeRegEx = new RegExp(/<div class="player_position_photo"[^>]*><a href="\/(.*?)(?=_)/gs);
+  let firstRegEx = new RegExp(/sub_child" style="display:\s*block.*?href="\/(.*?)_/gs);
+  let secondRegEx = new RegExp(/sub_child" style="display:\s*none.*?href="\/(.*?)_/gs);
 
-  // Sub aber erste Option
-  let firstRegEx = new RegExp(
-    /sub_child" style="display:\s*block.*?href="\/(.*?)_/gs,
-  );
-
-  // Zweite Optionen
-  let secondRegEx = new RegExp(
-    /sub_child" style="display:\s*none.*?href="\/(.*?)_/gs,
-  );
+  // We will store the HTML of teams currently playing to detect bench players later
+  let playingTeamsHtml = "";
 
   // Loop through teams
   for (let j = 0; j < teamURIs.length; j++) {
-    //Fetch Content
     let urlLI = "https://www.ligainsider.de/" + teamURIs[j];
     let htmlContent = UrlFetchApp.fetch(urlLI).getContentText();
 
-    //Spieltag nicht berücksichtigen
-    if (!htmlContent.includes('class="team_title_area"')) {
-      //Regex scrape
-      //Starter ohne Sub
-      const safeRegExArray = Array.from([...htmlContent.matchAll(safeRegEx)]);
+    let isMatchGoingOn = htmlContent.includes('class="team_title_area"');
 
-      for (var i = 0; i < safeRegExArray.length; i++) {
-        let playerString = safeRegExArray[i][1].split("-").join(" ");
-        currentLineUpArray.push({
+    if (isMatchGoingOn) {
+      playingTeamsHtml += htmlContent; // Save HTML of active matches
+    }
+
+    // Helper to run regex and push to the correct array
+    const extractPlayers = (regex, targetArray, propertyName, role) => {
+      const matches = Array.from([...htmlContent.matchAll(regex)]);
+      for (let i = 0; i < matches.length; i++) {
+        let playerString = matches[i][1].split("-").join(" ");
+        targetArray.push({
           ligaInsiderName: playerString,
-          lineUp: "safe",
+          [propertyName]: role
         });
       }
+    };
 
-      //First Option
-      const firstRegExArray = Array.from([...htmlContent.matchAll(firstRegEx)]);
-
-      for (var i = 0; i < firstRegExArray.length; i++) {
-        let playerString = firstRegExArray[i][1].split("-").join(" ");
-        currentLineUpArray.push({
-          ligaInsiderName: playerString,
-          lineUp: "first",
-        });
-      }
-
-      //Second Option
-      const secondRegExArray = Array.from([
-        ...htmlContent.matchAll(secondRegEx),
-      ]);
-
-      for (var i = 0; i < secondRegExArray.length; i++) {
-        let playerString = secondRegExArray[i][1].split("-").join(" ");
-        currentLineUpArray.push({
-          ligaInsiderName: playerString,
-          lineUp: "second",
-        });
-      }
+    // If match is going on, dump into GameDay. Otherwise, dump into LineUp.
+    if (isMatchGoingOn) {
+      extractPlayers(safeRegEx, currentGameDayArray, "gameDay", "safe");
+      extractPlayers(firstRegEx, currentGameDayArray, "gameDay", "first");
+      extractPlayers(secondRegEx, currentGameDayArray, "gameDay", "second");
+    } else {
+      extractPlayers(safeRegEx, currentLineUpArray, "lineUp", "safe");
+      extractPlayers(firstRegEx, currentLineUpArray, "lineUp", "first");
+      extractPlayers(secondRegEx, currentLineUpArray, "lineUp", "second");
     }
   }
 
-  //currentLineUp Array in firebase dumpen
+  // Dump expected lineup into firebase
   base.setData("currentLineUp", currentLineUpArray);
+  // Optional: You can also dump the actual game day array to firebase here if needed
+  // base.setData("currentGameDay", currentGameDayArray); 
 
-  //Alle comunioPlayer laden
+  // Load all comunio players
   let comunioPlayer = base.getData("comunioPlayer");
 
-  // Step 1: Transform currentLineUpArray into a lookup object
-  const lookup = currentLineUpArray.reduce(
-    (acc, { ligaInsiderName, lineUp }) => {
-      acc[ligaInsiderName] = lineUp;
-      return acc;
-    },
-    {},
-  );
+  // Step 1: Transform Arrays into lookup objects
+  const lineUpLookup = currentLineUpArray.reduce((acc, { ligaInsiderName, lineUp }) => {
+    acc[ligaInsiderName] = lineUp;
+    return acc;
+  }, {});
+
+  const gameDayLookup = currentGameDayArray.reduce((acc, { ligaInsiderName, gameDay }) => {
+    acc[ligaInsiderName] = gameDay;
+    return acc;
+  }, {});
 
   // Step 2: Match and enrich comunioPlayer
   for (const key in comunioPlayer) {
@@ -223,10 +209,26 @@ function getCurrentLineUp() {
       continue;
     }
 
-    // If ligaInsiderName exists but no match in currentLineUpArray, set lineUp to "bench"
-    player.lineUp = lookup[player.ligaInsiderName] || "bench";
+    // Format the name as it appears in the LigaInsider URL to check if their team is playing
+    let urlFormattedName = player.ligaInsiderName.split(" ").join("-");
+    
+    // If the player's profile URL snippet exists in active match HTML, their team is currently playing
+    let isTeamPlaying = playingTeamsHtml.includes('href="/' + urlFormattedName + '_');
+
+    if (isTeamPlaying) {
+      // Set the actual game result (safe, first, second, or bench)
+      // We DO NOT change player.lineUp here.
+      player.gameDay = gameDayLookup[player.ligaInsiderName] || "bench";
+    } else {
+      // Set the expected lineup (safe, first, second, or bench)
+      player.lineUp = lineUpLookup[player.ligaInsiderName] || "bench";
+      
+      // Optional: Clear out gameDay if the team is no longer playing
+      // player.gameDay = null; 
+    }
   }
 
+  // Save back to firebase
   base.updateData("comunioPlayer", comunioPlayer);
 }
 

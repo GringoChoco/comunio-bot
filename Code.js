@@ -45,7 +45,7 @@ const nurMitLIName = () => {
   }
 };
 
-const getComunioPlayerByID = (id = 34347) => {
+const getComunioPlayerByID = (id = 33630) => {
   let player = base.getData("comunioPlayer/" + id);
   Logger.log(JSON.stringify(player));
 };
@@ -69,7 +69,8 @@ const monrningUpdate = () => {
 
 //Daten Backup zu  Saisonende
 const backUp = () => {
-  let backUpData = base.getData("comunioPlayer");
-  //base.setData("comunioPlayer2025", backUpData) //startjahr der Saison
-  //base.setData("teamStat2024", backUpData) //startjahr der Saison
+  //let backUpData = base.getData("comunioPlayer");
+  //let backUpData = base.getData("teamStats");
+  //base.setData("comunioPlayer202526", backUpData) 
+  //base.setData("teamStat202526", backUpData)
 };
